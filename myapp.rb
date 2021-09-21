@@ -24,7 +24,6 @@ class Myapp < Roda
 
 
   route do |r|
-
     r.root do
       view("homepage")
     end
@@ -36,11 +35,11 @@ class Myapp < Roda
     r.get "contact" do
       view("contact")
     end
-  end
 
-  r.get "login" do
+    r.get "login" do
       view("login")
     end
+
     r.post "login" do
       if user = User.authenticate(r["email"], r["password"])
         session[:user_id] = user.id
@@ -49,6 +48,7 @@ class Myapp < Roda
         r.redirect "/login"
       end
     end
+
     r.post "logout" do
       session.clear
       r.redirect "/"
