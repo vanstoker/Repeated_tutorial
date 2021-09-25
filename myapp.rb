@@ -54,13 +54,17 @@ class Myapp < Roda
       r.redirect "/"
     end
 
+    unless session[:user_id]
+      r.redirect "/login"
+    end
+
     r.on "users" do
       r.get "new" do
         @user = User.new
         view("users/new")
       end
 
-      r.get ":id" do |id|
+      r.get Integer do |id|
         @user = User[id]
         view("users/show")
       end
