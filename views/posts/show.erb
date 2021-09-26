@@ -1,0 +1,7 @@
+<h1><%= @post.title %></h1>
+<p>by <%= @user_name %> on <%= @post.created_at.strftime("%Y-%m-%d") %></p>
+
+<%= @post.content %>
+<p>
+	<a href="/posts/<%= @post.id %>/edit">Edit post</a>
+</p>

@@ -11,12 +11,14 @@ DB = Sequel.connect(adapter: "postgres", database: database,
 
 class Myapp < Roda
   Sequel::Model.plugin :validation_helpers
+  Sequel::Model.plugin :timestamps, update_on_create: true
 
   use Rack::Session::Cookie, secret: "some_nice_long_random_string_DSKJH4378EYR7EGKUFH", key: "_myapp_session"
   use Rack::Protection
   plugin :csrf
 
   require './models/user.rb'
+  require './models/post.rb'
 
   plugin :static, ["/images", "/css", "/js"]
   plugin :render
@@ -25,6 +27,7 @@ class Myapp < Roda
 
   route do |r|
     r.root do
+      @posts = Post.reverse_order(:created_at)
       view("homepage")
     end
 
@@ -54,8 +57,51 @@ class Myapp < Roda
       r.redirect "/"
     end
 
+    r.get "/posts\\/([0-9]+)/" do |id|
+      @post = Post[id]
+      @user_name = @post.user.name
+      view("posts/show")
+    end
+
     unless session[:user_id]
       r.redirect "/login"
+    end
+
+    r.on "posts" do
+      r.get "new" do
+        @post = Post.new
+        view("posts/new")
+      end
+
+      r.get Integer do |id|
+        @post = Post[id]
+        view("posts/show")
+      end
+
+      r.post do
+        @post = Post.new(r["post"])
+        @post.user = User[session[:user_id]]
+
+        if @post.valid? && @post.save
+          r.redirect "/"
+        else
+          view("new")
+        end
+      end
+
+      r.on Integer do |id|
+        @post = Post[id]
+        r.get "edit" do
+          view("posts/edit")
+        end
+        r.post do
+          if @post.update(r["post"])
+            r.redirect "/posts/#{@post}"
+          else
+            view("posts/edit")
+          end
+        end
+      end
     end
 
     r.on "users" do
